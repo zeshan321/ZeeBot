@@ -19,7 +19,7 @@ public class Config {
                     String[] separate = line.split(" = ", 2);
 
                     String key = separate[0];
-                    String value = separate[1].replace(" ", "");
+                    String value = separate[1];
                     settings.put(key, value);
                 }
             }
