@@ -1,2 +1,5 @@
 Brain.say("What goes up and down but does not move?");
-Brain.say("Stairs");
+Brain.sleep(100);
+Brain.say("Stairs!");
+Brain.sleep(100);
+Brain.say("Ha Ha Ha!");

@@ -1,5 +1,11 @@
 package com.zeshanaslam.zeebot;
 
+import com.darkprograms.speech.microphone.microphone.MicrophoneAnalyzer;
+import com.darkprograms.speech.microphone.recognizer.GSpeechDuplex;
+import javaFlacEncoder.FLACFileWriter;
+
+import javax.script.Bindings;
+import javax.script.ScriptContext;
 import javax.script.ScriptException;
 
 /**
@@ -12,79 +18,83 @@ public class Main {
     static BrainUtil brainUtil;
 
     public static void main(String[] args) {
-        // Initialize utils
         brainUtil = new BrainUtil();
+        brainUtil.config.load();
+
         ScriptsManager scriptsManager = new ScriptsManager();
 
-        scriptsManager.clear();
         scriptsManager.load();
 
-        // initialize Voce
-        voce.SpeechInterface.init("./lib", true, true, "./lib/gram", "brain");
-
         // Start tracking
-        System.out.println("Say 'Hey Zee'.");
-        while (true) {
-            try {
-                Thread.sleep(200);
-            } catch (InterruptedException ignored) {
-            }
+        System.out.println("Say '" + brainUtil.config.get("Trigger") + "'.");
+        MicrophoneAnalyzer mic = new MicrophoneAnalyzer(FLACFileWriter.FLAC);
+        GSpeechDuplex duplex = new GSpeechDuplex(brainUtil.config.get("Key"));
 
-            while (voce.SpeechInterface.getRecognizerQueueSize() > 0) {
-                String input = voce.SpeechInterface.popRecognizedString();
+        duplex.addResponseListener(googleResponse -> {
+            if (!googleResponse.isFinalResponse()) return;
 
-                System.out.println(input);
-                if (!brainUtil.isListening) {
-                    if (input.equals("hey zee") || input.equals("hey z")) {
-                        brainUtil.isListening = true;
-                        voce.SpeechInterface.synthesize("Hey, how can I help?");
-                    }
-                } else {
-                    switch (input) {
-                        case "reload":
-                            voce.SpeechInterface.stopSynthesizing();
-                            voce.SpeechInterface.destroy();
-                            scriptsManager.clear();
-                            break;
-                        case "quit":
-                        case "exit":
-                            voce.SpeechInterface.destroy();
-                            System.exit(0);
-                            break;
+            String input = googleResponse.getResponse().trim();
 
-                        case "cancel":
-                        case "never mind":
-                            break;
-
-                        // Hook into scripting
-                        default:
-                            // Compile later
-                            if (scriptsManager.contains(input)) {
-                                ScriptObject scriptObject = scriptsManager.getObject(input);
-                                try {
-                                    scriptObject.script.eval();
-                                } catch (ScriptException e) {
-                                    e.printStackTrace();
-                                }
-                            } else {
-                                brainUtil.say("Sorry, I don't understand.");
-                            }
-                            ScriptObject scriptObject = null;
-
-                            for (String key : scriptsManager.getKeys()) {
-                                if (key.contains(" + ")) {
-                                    String[] data = key.split(" + ");
-
-                                } else {
-
-                                }
-                            }
-                            break;
-                    }
-
-                    brainUtil.isListening = false;
+            System.out.println(input);
+            if (!brainUtil.isListening) {
+                if (input.equals(brainUtil.config.get("Trigger"))) {
+                    brainUtil.isListening = true;
+                    brainUtil.say("Hey, how can I help?");
                 }
+            } else {
+                switch (input) {
+                    case "reload":
+                        scriptsManager.load();
+                        break;
+                    case "quit":
+                    case "exit":
+                        System.exit(0);
+                        break;
+
+                    case "cancel":
+                    case "never mind":
+                        break;
+
+                    // Hook into scripting
+                    default:
+                        // Compile later
+                        if (scriptsManager.contains(input)) {
+                            ScriptObject scriptObject = scriptsManager.getObject(input);
+                            try {
+                                Bindings bindings = scriptsManager.engine.getBindings(ScriptContext.ENGINE_SCOPE);
+                                bindings.put("Brain", Main.brainUtil);
+
+                                scriptObject.script.eval(bindings);
+                            } catch (ScriptException e) {
+                                e.printStackTrace();
+                            }
+                        } else {
+                            brainUtil.say("Sorry, I don't understand.");
+                        }
+                        ScriptObject scriptObject = null;
+
+                        for (String key : scriptsManager.getKeys()) {
+                            if (key.contains(" + ")) {
+                                String[] data = key.split(" + ");
+
+                            } else {
+
+                            }
+                        }
+                        break;
+                }
+
+                brainUtil.isListening = false;
             }
+
+        });
+
+        mic.open();
+        try {
+            // Recognition done here.
+            duplex.recognize(mic.getTargetDataLine(), mic.getAudioFormat());
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 }

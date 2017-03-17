@@ -11,10 +11,12 @@ import java.util.Set;
 public class ScriptsManager {
 
     public ScriptEngine engine;
+    public Compilable compilableEngine;
     private HashMap<String, ScriptObject> scriptData = new HashMap<>();
 
     public void load() {
         this.engine = new ScriptEngineManager().getEngineByName("nashorn");
+        this.compilableEngine = (Compilable) engine;
         scriptData.clear();
 
         int loaded = 0;
@@ -49,21 +51,13 @@ public class ScriptsManager {
 
                     script = String.join("\n", script).replace("\n", "").replace("\t", "");
 
-                    Compilable compilable = (Compilable) engine;
-                    CompiledScript compiledScript = null;
                     try {
-                        compiledScript = compilable.compile(script);
-
-                        Bindings bindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
-                        bindings.put("Brain", Main.brainUtil);
-
-                        compiledScript.eval(bindings);
+                        scriptData.put(data, new ScriptObject(data, dir, compilableEngine.compile(script)));
+                        loaded = loaded + 1;
                     } catch (ScriptException e) {
-                        System.out.println("[Zee] Error! File not found: " + data + " = " + dir);
+                        System.out.println("[Zee] Error! Unable to compile: " + data + " = " + dir);
+                        e.printStackTrace();
                     }
-
-                    scriptData.put(data, new ScriptObject(data, dir, compiledScript));
-                    loaded = loaded + 1;
                 }
             }
         } catch (IOException e) {
