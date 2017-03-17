@@ -34,7 +34,6 @@ public class BrainUtil {
     }
 
     public String replace(String math) {
-        System.out.println("t: " + math);
         math = math.replace("square root", "sqrt");
         math = math.replace("sine", "sin");
         math = math.replace("cosine", "cos");

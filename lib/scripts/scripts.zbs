@@ -1,2 +1,2 @@
-how are you = questions/howareyou.zbs
-tell me a joke = questions/tellmeajoke.zbs
+input == "how are you"; = questions/howareyou.zbs
+input == "tell me a joke"; = questions/tellmeajoke.zbs

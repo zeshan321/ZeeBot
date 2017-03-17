@@ -5,6 +5,7 @@ import com.darkprograms.speech.microphone.recognizer.GSpeechDuplex;
 import javaFlacEncoder.FLACFileWriter;
 
 import javax.script.Bindings;
+import javax.script.Invocable;
 import javax.script.ScriptContext;
 import javax.script.ScriptException;
 
@@ -33,7 +34,7 @@ public class Main {
         duplex.addResponseListener(googleResponse -> {
             if (!googleResponse.isFinalResponse()) return;
 
-            String input = brainUtil.replace(googleResponse.getResponse().trim());
+            String input = brainUtil.replace(googleResponse.getResponse().trim()).toLowerCase();
 
             System.out.println(input);
             if (!brainUtil.isListening) {
@@ -58,12 +59,28 @@ public class Main {
 
                     // Hook into scripting
                     default:
-                        // Compile later
-                        if (scriptsManager.contains(input)) {
-                            ScriptObject scriptObject = scriptsManager.getObject(input);
+                        ScriptObject scriptObject = null;
+
+                        for (String key : scriptsManager.getKeys()) {
                             try {
                                 Bindings bindings = scriptsManager.engine.getBindings(ScriptContext.ENGINE_SCOPE);
                                 bindings.put("Brain", Main.brainUtil);
+                                bindings.put("input", input);
+
+                                if ((boolean) scriptsManager.engine.eval(key, bindings)) {
+                                    scriptObject = scriptsManager.getObject(key);
+                                    break;
+                                }
+                            } catch (ScriptException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        if (scriptObject != null) {
+                            try {
+                                Bindings bindings = scriptsManager.engine.getBindings(ScriptContext.ENGINE_SCOPE);
+                                bindings.put("Brain", Main.brainUtil);
+                                bindings.put("input", input);
 
                                 scriptObject.script.eval(bindings);
                             } catch (ScriptException e) {
@@ -71,16 +88,6 @@ public class Main {
                             }
                         } else {
                             brainUtil.say("Sorry, I don't understand.");
-                        }
-                        ScriptObject scriptObject = null;
-
-                        for (String key : scriptsManager.getKeys()) {
-                            if (key.contains(" + ")) {
-                                String[] data = key.split(" + ");
-
-                            } else {
-
-                            }
                         }
                         break;
                 }
