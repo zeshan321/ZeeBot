@@ -39,10 +39,19 @@ public class Main {
             System.out.println(input);
             if (!brainUtil.isListening) {
                 if (input.equals(brainUtil.config.get("Trigger").toLowerCase())) {
-                    brainUtil.isListening = true;
                     brainUtil.say("Hey, how can I help?");
+                    brainUtil.isListening = true;
                 }
             } else {
+                // Remove in case picks up self
+                if (input.startsWith("how can i help")) {
+                    input = input.replace("how can i help", "");
+                }
+
+                if (input.equals("")) {
+                    return;
+                }
+
                 switch (input) {
                     case "reload":
                         brainUtil.config.load();
