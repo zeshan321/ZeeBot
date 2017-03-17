@@ -1,2 +1,3 @@
 input == "how are you"; = questions/howareyou.zbs
 input == "tell me a joke"; = questions/tellmeajoke.zbs
+input.startsWith("what's"); = questions/doMath.zbs

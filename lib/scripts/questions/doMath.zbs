@@ -1,0 +1,7 @@
+var newInput = input.replace("what's ", "").replace("by", "").replace("equal", "").replace("the", "").replace("of", "");
+
+var answer = Brain.evaluateMath(newInput);
+
+if (!Brain.isNaN(answer)) {
+	Brain.say("The answer is " + Brain.evaluateMath(newInput));
+}
