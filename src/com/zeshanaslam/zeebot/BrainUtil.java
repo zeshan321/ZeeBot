@@ -49,16 +49,12 @@ public class BrainUtil {
         math = math.replace("times", "*");
         math = math.replace("time", "*");
         math = math.replace("multiply", "*");
+        math = math.replace("x", "*");
         math = math.replace("decimal", "\\.");
         math = math.replace("dot", "\\.");
         math = math.replace("period", "\\.");
         math = math.replace("percent", "%");
 
-        NumberWordConverter converter = new NumberWordConverter();
-        String converted = converter.replaceNumbers(math);
-        if (!converted.equals("000")) {
-            math = converted;
-        }
         return math;
     }
 

@@ -33,7 +33,7 @@ public class Main {
         duplex.addResponseListener(googleResponse -> {
             if (!googleResponse.isFinalResponse()) return;
 
-            String input = googleResponse.getResponse().trim();
+            String input = brainUtil.replace(googleResponse.getResponse().trim());
 
             System.out.println(input);
             if (!brainUtil.isListening) {
